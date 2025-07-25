@@ -1,0 +1,280 @@
+<!-- Settings Tab -->
+<div class="tab-pane fade" id="settings" role="tabpanel">
+    <div class="row">
+        <!-- GitHub Configuration -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fab fa-github me-2"></i>Configuración de GitHub
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="githubConfigForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="githubOwner" class="form-label">Propietario del Repositorio</label>
+                                <input type="text" class="form-control" id="githubOwner" placeholder="usuario-github">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="githubRepo" class="form-label">Nombre del Repositorio</label>
+                                <input type="text" class="form-control" id="githubRepo" placeholder="nombre-repositorio">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="githubToken" class="form-label">Token de Acceso Personal</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="githubToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+                                <button class="btn btn-outline-secondary" type="button" id="toggleGithubToken">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Necesita permisos de lectura y escritura en el repositorio.
+                                <a href="https://github.com/settings/tokens" target="_blank" class="text-decoration-none">
+                                    Crear token <i class="fas fa-external-link-alt"></i>
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="githubBranch" class="form-label">Rama</label>
+                            <input type="text" class="form-control" id="githubBranch" value="main" placeholder="main">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="githubPath" class="form-label">Ruta del Archivo Excel</label>
+                            <input type="text" class="form-control" id="githubPath" value="data/supervisiones.xlsx" placeholder="data/supervisiones.xlsx">
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="button" class="btn btn-outline-primary" id="testGitHubConnection">
+                                <i class="fas fa-plug me-2"></i>Probar Conexión
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Guardar Configuración
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Synchronization Panel -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-sync-alt me-2"></i>Sincronización
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="githubStatus" class="mb-3">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            GitHub no configurado
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-success" id="syncToGitHub" disabled>
+                            <i class="fas fa-cloud-upload-alt me-2"></i>Subir a GitHub
+                        </button>
+                        <button class="btn btn-info" id="loadFromGitHub" disabled>
+                            <i class="fas fa-cloud-download-alt me-2"></i>Cargar desde GitHub
+                        </button>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="mb-3">
+                        <h6>Última Sincronización</h6>
+                        <small class="text-muted" id="lastSyncTime">Nunca</small>
+                    </div>
+                    
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="autoSync">
+                        <label class="form-check-label" for="autoSync">
+                            Sincronización automática
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- System Settings -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-cog me-2"></i>Configuración del Sistema
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="systemLanguage" class="form-label">Idioma</label>
+                        <select class="form-select" id="systemLanguage">
+                            <option value="es" selected>Español</option>
+                            <option value="en">English</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="dateFormat" class="form-label">Formato de Fecha</label>
+                        <select class="form-select" id="dateFormat">
+                            <option value="dd/mm/yyyy" selected>DD/MM/YYYY</option>
+                            <option value="mm/dd/yyyy">MM/DD/YYYY</option>
+                            <option value="yyyy-mm-dd">YYYY-MM-DD</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="timeZone" class="form-label">Zona Horaria</label>
+                        <select class="form-select" id="timeZone">
+                            <option value="America/Lima" selected>Lima, Perú (UTC-5)</option>
+                            <option value="America/New_York">Nueva York (UTC-5/-4)</option>
+                            <option value="Europe/Madrid">Madrid (UTC+1/+2)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="enableNotifications" checked>
+                        <label class="form-check-label" for="enableNotifications">
+                            Habilitar notificaciones
+                        </label>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="enableGeolocation" checked>
+                        <label class="form-check-label" for="enableGeolocation">
+                            Habilitar geolocalización
+                        </label>
+                    </div>
+                    
+                    <button class="btn btn-primary w-100" id="saveSystemSettings">
+                        <i class="fas fa-save me-2"></i>Guardar Configuración
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Data Management -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-database me-2"></i>Gestión de Datos
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6>Información de Almacenamiento</h6>
+                        <div class="row">
+                            <div class="col-6">
+                                <small class="text-muted">Datos principales:</small>
+                                <div id="dataStorageSize" class="fw-bold">Calculando...</div>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Registros de acceso:</small>
+                                <div id="logsStorageSize" class="fw-bold">Calculando...</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6>Backup y Restauración</h6>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-success" id="createBackup">
+                                <i class="fas fa-download me-2"></i>Crear Backup
+                            </button>
+                            <button class="btn btn-outline-info" id="restoreBackup">
+                                <i class="fas fa-upload me-2"></i>Restaurar Backup
+                            </button>
+                        </div>
+                        <input type="file" id="backupFile" accept=".json" style="display: none;">
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="mb-3">
+                        <h6 class="text-danger">Zona de Peligro</h6>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-warning" id="changePassword">
+                                <i class="fas fa-key me-2"></i>Cambiar Contraseña
+                            </button>
+                            <button class="btn btn-outline-danger" id="clearData">
+                                <i class="fas fa-trash me-2"></i>Limpiar Todos los Datos
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- User Management (Admin Only) -->
+    <div class="row mt-4" id="userManagementSection" style="display: none;">
+        <div class="col-12">
+            <div class="card border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-users-cog me-2"></i>Gestión de Usuarios (Solo Administrador)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Nombre</th>
+                                            <th>Cargo</th>
+                                            <th>Estado</th>
+                                            <th>Último Acceso</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="usersManagementTable">
+                                        <!-- Users will be loaded dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Agregar Usuario</h6>
+                                </div>
+                                <div class="card-body">
+                                    <form id="addUserForm">
+                                        <div class="mb-3">
+                                            <label for="newUserName" class="form-label">Nombre Completo</label>
+                                            <input type="text" class="form-control" id="newUserName" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="newUserRole" class="form-label">Cargo</label>
+                                            <select class="form-select" id="newUserRole" required>
+                                                <option value="">Seleccionar...</option>
+                                                <option value="Supervisor">Supervisor</option>
+                                                <option value="Monitor">Monitor</option>
+                                                <option value="Coordinador">Coordinador</option>
+                                            </select>
+                                        </div>
+                                        <button type="submit" class="btn btn-success w-100">
+                                            <i class="fas fa-user-plus me-2"></i>Agregar Usuario
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

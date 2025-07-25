@@ -1,0 +1,28 @@
+title: Supervisiones X
+description: Sistema de Seguimiento de Avance para Actividades de Campo
+baseurl: ""
+url: ""
+
+# GitHub Pages settings
+plugins:
+  - jekyll-sitemap
+  - jekyll-feed
+
+# Exclude files from processing
+exclude:
+  - README.md
+  - LICENSE
+  - .gitignore
+  - uploads/
+
+# Include files that would normally be excluded
+include:
+  - _config.yml
+
+# Set the theme (optional)
+theme: minima
+
+# Custom variables
+app_name: "Supervisiones X"
+app_version: "1.0.0"
+default_password: "lotex2025"

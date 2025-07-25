@@ -1,0 +1,29 @@
+# Seguimiento de Avance App - Plan
+
+## Notes
+- App will be a static web app suitable for GitHub Pages.
+- Simple password protection (e.g., 'lotex2025') required; not highly secure.
+- Users log in with password and select a username from a list (editable table).
+- Each access logs date/time, geolocation (lat/lon), and username.
+- App will allow viewing metrics of progress (by point, location, activity, day, etc.).
+- App will allow uploading/updating progress, modifying an Excel (xlsx) file.
+- Changes to progress are saved back to GitHub (by updating the Excel file).
+- Special logic for point marking: replanteos (R suffix), new points (N suffix), and discarding points with reasons.
+- User provided sample Excel and TXT files for data structure reference.
+- All logic must be client-side (JavaScript/TypeScript, HTML, CSS) due to GitHub Pages limitations (no backend).
+- The app will be called "Supervisiones X".
+
+## Task List
+- [x] Analyze sample Excel/TXT to define data structure.
+- [ ] Design static web app architecture (frontend-only, no backend).
+- [ ] Implement simple password gate and username selection.
+- [ ] Implement access logging (date, time, lat/lon, username).
+- [ ] Create UI for progress visualization and metrics.
+- [ ] Create UI for submitting/updating progress.
+- [ ] Implement logic for replanteos, new points, and discards.
+- [ ] Implement Excel file reading/writing in browser (using libraries like SheetJS).
+- [ ] Implement GitHub integration for updating Excel file (likely via GitHub API or manual PR/download/upload flow).
+- [ ] Containerize/build app for deployment to GitHub Pages.
+
+## Current Goal
+Design static web app architecture (frontend-only, no backend).
