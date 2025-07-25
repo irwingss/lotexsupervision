@@ -1,4 +1,14 @@
-const { Octokit } = require('@octokit/rest');
+// Dynamic import for Vercel compatibility
+let Octokit = null;
+
+// Function to get Octokit class
+async function getOctokit() {
+    if (!Octokit) {
+        const octokitModule = await import('@octokit/rest');
+        Octokit = octokitModule.Octokit;
+    }
+    return Octokit;
+}
 
 // GitHub configuration from environment variables
 const GITHUB_TOKEN = process.env.TOKEN_GITHUB_API;
@@ -27,15 +37,25 @@ if (!GITHUB_TOKEN || !GITHUB_OWNER || !GITHUB_REPO) {
     throw new Error('Missing required GitHub environment variables');
 }
 
-// Initialize Octokit
-const octokit = new Octokit({
-    auth: GITHUB_TOKEN,
-});
+// Initialize Octokit instance (will be created dynamically)
+let octokit = null;
+
+// Function to get initialized Octokit instance
+async function getOctokitInstance() {
+    if (!octokit) {
+        const OctokitClass = await getOctokit();
+        octokit = new OctokitClass({
+            auth: GITHUB_TOKEN,
+        });
+    }
+    return octokit;
+}
 
 // Helper function to get file content from GitHub
 async function getFileFromGitHub(path) {
     try {
-        const response = await octokit.rest.repos.getContent({
+        const octokitInstance = await getOctokitInstance();
+        const response = await octokitInstance.rest.repos.getContent({
             owner: GITHUB_OWNER,
             repo: GITHUB_REPO,
             path: path,
@@ -72,7 +92,8 @@ async function createOrUpdateFileInGitHub(path, content, message, sha = null) {
         params.sha = sha;
     }
     
-    return await octokit.rest.repos.createOrUpdateFileContents(params);
+    const octokitInstance = await getOctokitInstance();
+    return await octokitInstance.rest.repos.createOrUpdateFileContents(params);
 }
 
 // Helper function to delete file from GitHub
@@ -84,7 +105,8 @@ async function deleteFileFromGitHub(path, message) {
             throw new Error('File not found');
         }
         
-        return await octokit.rest.repos.deleteFile({
+        const octokitInstance = await getOctokitInstance();
+        return await octokitInstance.rest.repos.deleteFile({
             owner: GITHUB_OWNER,
             repo: GITHUB_REPO,
             path: path,
@@ -100,7 +122,8 @@ async function deleteFileFromGitHub(path, message) {
 // Get directory contents from GitHub
 async function getDirectoryContents(path = GITHUB_FILE_PATH) {
     try {
-        const response = await octokit.rest.repos.getContent({
+        const octokitInstance = await getOctokitInstance();
+        const response = await octokitInstance.rest.repos.getContent({
             owner: GITHUB_OWNER,
             repo: GITHUB_REPO,
             path: path,

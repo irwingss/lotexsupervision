@@ -14,10 +14,11 @@ module.exports = async (req, res) => {
 
         console.log('Environment check:', envCheck);
 
-        // Try to initialize Octokit
+        // Try to initialize Octokit with dynamic import
         let octokitStatus = 'not_initialized';
         try {
-            const { Octokit } = require('@octokit/rest');
+            const octokitModule = await import('@octokit/rest');
+            const { Octokit } = octokitModule;
             const octokit = new Octokit({
                 auth: process.env.TOKEN_GITHUB_API,
             });
