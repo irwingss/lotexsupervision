@@ -25,7 +25,7 @@ const upload = multer({
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname)));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Add multer middleware to upload routes
 app.use('/api/supervisions/:name/upload', upload.single('file'));
@@ -35,12 +35,17 @@ supervisionAPI.setupRoutes(app);
 
 // Serve the main application
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Start server
-app.listen(PORT, () => {
-    console.log(`Supervisiones X server running on http://localhost:${PORT}`);
-    console.log('Admin password: admin.lotex2025');
-    console.log('User password: lotex2025');
-});
+// Export for Vercel
+module.exports = app;
+
+// Start server only if not in Vercel
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+        console.log(`Supervisiones X server running on http://localhost:${PORT}`);
+        console.log('Admin password: admin.lotex2025');
+        console.log('User password: lotex2025');
+    });
+}

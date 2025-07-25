@@ -7,6 +7,26 @@ const GITHUB_REPO = process.env.GITHUB_REPO;
 const GITHUB_BRANCH = process.env.GITHUB_BRANCH || 'main';
 const GITHUB_FILE_PATH = process.env.GITHUB_FILE_PATH || 'uploads';
 
+// Debug logging for environment variables
+console.log('GitHub Config:', {
+    hasToken: !!GITHUB_TOKEN,
+    tokenLength: GITHUB_TOKEN ? GITHUB_TOKEN.length : 0,
+    owner: GITHUB_OWNER,
+    repo: GITHUB_REPO,
+    branch: GITHUB_BRANCH,
+    filePath: GITHUB_FILE_PATH
+});
+
+// Validate required environment variables
+if (!GITHUB_TOKEN || !GITHUB_OWNER || !GITHUB_REPO) {
+    console.error('Missing required GitHub environment variables:', {
+        TOKEN_GITHUB_API: !!GITHUB_TOKEN,
+        GITHUB_OWNER: !!GITHUB_OWNER,
+        GITHUB_REPO: !!GITHUB_REPO
+    });
+    throw new Error('Missing required GitHub environment variables');
+}
+
 // Initialize Octokit
 const octokit = new Octokit({
     auth: GITHUB_TOKEN,
@@ -101,11 +121,24 @@ async function getDirectoryContents(path = GITHUB_FILE_PATH) {
 
 // Create supervision folder in GitHub by creating template files
 async function createSupervisionInGitHub(name) {
+    console.log(`Creating supervision "${name}" in GitHub...`);
+    console.log('GitHub config check:', {
+        hasToken: !!GITHUB_TOKEN,
+        owner: GITHUB_OWNER,
+        repo: GITHUB_REPO,
+        branch: GITHUB_BRANCH,
+        filePath: GITHUB_FILE_PATH
+    });
+    
     try {
         const supervisionPath = `${GITHUB_FILE_PATH}/${name}`;
+        console.log(`Supervision path: ${supervisionPath}`);
         
         // Check if supervision already exists
+        console.log('Checking if supervision already exists...');
         const existingContents = await getDirectoryContents(supervisionPath);
+        console.log(`Existing contents found: ${existingContents.length} items`);
+        
         if (existingContents.length > 0) {
             throw new Error('Supervision already exists');
         }
@@ -118,9 +151,12 @@ async function createSupervisionInGitHub(name) {
             { name: 'locaciones.txt', content: '' }
         ];
         
+        console.log(`Creating ${templateFiles.length} template files...`);
+        
         // Create each template file
         const promises = templateFiles.map(file => {
             const filePath = `${supervisionPath}/${file.name}`;
+            console.log(`Creating file: ${filePath}`);
             return createOrUpdateFileInGitHub(
                 filePath,
                 file.content,
@@ -129,10 +165,16 @@ async function createSupervisionInGitHub(name) {
         });
         
         await Promise.all(promises);
+        console.log('All template files created successfully');
         
         return { success: true, message: `Supervision "${name}" created successfully in GitHub` };
     } catch (error) {
-        console.error('Error creating supervision in GitHub:', error);
+        console.error('Error creating supervision in GitHub:', {
+            message: error.message,
+            status: error.status,
+            response: error.response?.data,
+            stack: error.stack
+        });
         throw new Error(`Error creating supervision: ${error.message}`);
     }
 }
