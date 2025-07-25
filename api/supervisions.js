@@ -1,13 +1,27 @@
 const fs = require('fs').promises;
 const path = require('path');
 const multer = require('multer');
-const github = require('./github');
 
 const UPLOADS_DIR = path.join(__dirname, '..', 'uploads');
 
 // Check if we're in production (Vercel) or development
 const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL;
 const useGitHub = isProduction && process.env.TOKEN_GITHUB_API;
+
+// Lazy load GitHub module to avoid initialization errors
+let github = null;
+function getGitHubModule() {
+    if (!github && useGitHub) {
+        try {
+            github = require('./github');
+            console.log('GitHub module loaded successfully');
+        } catch (error) {
+            console.error('Failed to load GitHub module:', error.message);
+            throw new Error(`GitHub integration failed: ${error.message}`);
+        }
+    }
+    return github;
+}
 
 // Ensure uploads directory exists
 async function ensureUploadsDir() {
@@ -27,7 +41,8 @@ async function ensureUploadsDir() {
 async function getSupervisions() {
     try {
         if (useGitHub) {
-            return await github.getSupervisionsList();
+            const githubModule = getGitHubModule();
+            return await githubModule.getSupervisionsList();
         }
         
         await ensureUploadsDir();
@@ -50,7 +65,8 @@ async function getSupervisions() {
 async function createSupervision(name) {
     try {
         if (useGitHub) {
-            return await github.createSupervisionInGitHub(name);
+            const githubModule = getGitHubModule();
+            return await githubModule.createSupervisionInGitHub(name);
         }
         
         await ensureUploadsDir();
@@ -97,7 +113,8 @@ async function createSupervision(name) {
 async function deleteSupervision(name) {
     try {
         if (useGitHub) {
-            return await github.deleteSupervisionFromGitHub(name);
+            const githubModule = getGitHubModule();
+            return await githubModule.deleteSupervisionFromGitHub(name);
         }
         
         const supervisionPath = path.join(UPLOADS_DIR, name);
@@ -115,7 +132,8 @@ async function deleteSupervision(name) {
 async function getSupervisionFiles(supervisionName) {
     try {
         if (useGitHub) {
-            return await github.getSupervisionFiles(supervisionName);
+            const githubModule = getGitHubModule();
+            return await githubModule.getSupervisionFiles(supervisionName);
         }
         
         const supervisionPath = path.join(UPLOADS_DIR, supervisionName);
@@ -149,7 +167,8 @@ async function uploadSupervisionFile(supervisionName, file, fileType) {
         const fileContent = file.buffer.toString('utf8');
         
         if (useGitHub) {
-            return await github.uploadFileToSupervision(supervisionName, targetFilename, fileContent);
+            const githubModule = getGitHubModule();
+            return await githubModule.uploadFileToSupervision(supervisionName, targetFilename, fileContent);
         }
         
         const supervisionPath = path.join(UPLOADS_DIR, supervisionName);
