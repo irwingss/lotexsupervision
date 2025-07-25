@@ -33,6 +33,9 @@ app.use('/api/supervisions/:name/upload', upload.single('file'));
 // Setup API routes
 supervisionAPI.setupRoutes(app);
 
+// Debug route for environment variables and GitHub connection
+app.get('/api/debug', require('./api/debug'));
+
 // Serve the main application
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
