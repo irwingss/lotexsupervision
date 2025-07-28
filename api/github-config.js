@@ -14,7 +14,7 @@ export default function handler(req, res) {
             owner: process.env.GITHUB_OWNER || 'default-owner',
             repo: process.env.GITHUB_REPO || 'App_Seguimiento_LoteX',
             branch: process.env.GITHUB_BRANCH || 'main',
-            filePath: process.env.GITHUB_FILE_PATH || 'uploads/muestra_final.xlsx'
+            filePath: process.env.GITHUB_FILE_PATH || 'public/uploads'
         };
 
         // Validate that we have the required token

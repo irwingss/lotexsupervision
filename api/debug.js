@@ -9,7 +9,7 @@ module.exports = async (req, res) => {
             owner: process.env.GITHUB_OWNER,
             repo: process.env.GITHUB_REPO,
             branch: process.env.GITHUB_BRANCH || 'main',
-            filePath: process.env.GITHUB_FILE_PATH || 'uploads'
+            filePath: process.env.GITHUB_FILE_PATH || 'public/uploads'
         };
 
         console.log('Environment check:', envCheck);
