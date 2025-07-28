@@ -1,6 +1,16 @@
-Juan Pérez,Supervisor,true
-María García,Analista,true
-Carlos López,Coordinador,true
-Ana Martínez,Técnico,true
-Luis Rodríguez,Supervisor,false
-Sofia Hernández,Analista,true
+NOMBRE,CARGO,ACTIVO
+Ángeles Mendiola Omar Jair,Supervisor,SI
+Alvarado Alama Armando Alonso,Monitor,SI
+Atúncar Quispe José Sebastián,Supervisor,SI
+Bautista Rivera Yecenia Elizabeth,Supervisor,SI
+Bustamante Bustamante Anarela Yamalin,Supervisor,SI
+Carbajal Seguil Víctor Hugo,Monitor,SI
+Castañeda Dávila Marco Antonio,Supervisor,SI
+Chipana De la Cruz, Julio Fermín,Monitor,SI
+Coronado Sáenz Richard Arturo,Supervisor,SI
+Effio Herrera Jhonattan Javier,Supervisor,SI
+Jara Perea Andrews Junior,Monitor,SI
+Liñán Flores Edward Luis,Supervisor,SI
+Muñoz Rosales Sandra Pilar,Supervisor,SI
+Ríos Quispe Jonathan Jason,Supervisor,SI
+Saldaña Ugaz Irwing Smith,Supervisor,SI
