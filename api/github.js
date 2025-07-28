@@ -15,7 +15,7 @@ const GITHUB_TOKEN = process.env.TOKEN_GITHUB_API;
 const GITHUB_OWNER = process.env.GITHUB_OWNER;
 const GITHUB_REPO = process.env.GITHUB_REPO;
 const GITHUB_BRANCH = process.env.GITHUB_BRANCH || 'main';
-const GITHUB_FILE_PATH = process.env.GITHUB_FILE_PATH || 'uploads';
+const GITHUB_FILE_PATH = process.env.GITHUB_FILE_PATH || 'public/uploads';
 
 // Debug logging for environment variables
 console.log('GitHub Config:', {
@@ -142,9 +142,9 @@ async function getDirectoryContents(path = GITHUB_FILE_PATH) {
     }
 }
 
-// Create supervision folder in GitHub by creating template files
-async function createSupervisionInGitHub(name) {
-    console.log(`Creating supervision "${name}" in GitHub...`);
+// Create supervision folder in GitHub with provided files
+async function createSupervisionInGitHub(name, files = []) {
+    console.log(`Creating supervision "${name}" in GitHub with ${files.length} files...`);
     console.log('GitHub config check:', {
         hasToken: !!GITHUB_TOKEN,
         owner: GITHUB_OWNER,
@@ -166,31 +166,32 @@ async function createSupervisionInGitHub(name) {
             throw new Error('Supervision already exists');
         }
         
-        // Template files to create
-        const templateFiles = [
-            { name: 'muestra_final.txt', content: '' },
-            { name: 'pafs.txt', content: '' },
-            { name: 'pd.txt', content: '' },
-            { name: 'locaciones.txt', content: '' }
-        ];
+        // If no files provided, create a placeholder README
+        if (files.length === 0) {
+            files = [{
+                name: 'README.md',
+                content: `# Supervisión: ${name}\n\nCarpeta de supervisión creada el ${new Date().toLocaleDateString('es-ES')}.\n\nPuede subir archivos usando la interfaz de gestión de archivos.`
+            }];
+        }
         
-        console.log(`Creating ${templateFiles.length} template files...`);
+        console.log(`Creating ${files.length} files...`);
         
-        // Create each template file
-        const promises = templateFiles.map(file => {
+        // Create each file in a single commit
+        const commitMessage = `Create supervision ${name} with ${files.length} file(s)`;
+        const promises = files.map(file => {
             const filePath = `${supervisionPath}/${file.name}`;
             console.log(`Creating file: ${filePath}`);
             return createOrUpdateFileInGitHub(
                 filePath,
                 file.content,
-                `Create ${file.name} for supervision ${name}`
+                commitMessage
             );
         });
         
         await Promise.all(promises);
-        console.log('All template files created successfully');
+        console.log('All files created successfully');
         
-        return { success: true, message: `Supervision "${name}" created successfully in GitHub` };
+        return { success: true, message: `Supervision "${name}" created successfully in GitHub with ${files.length} files` };
     } catch (error) {
         console.error('Error creating supervision in GitHub:', {
             message: error.message,

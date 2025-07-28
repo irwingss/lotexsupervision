@@ -48,8 +48,17 @@ class SupervisionesX {
         });
 
         // Admin panel event listeners
-        document.getElementById('createSupervisionBtn').addEventListener('click', () => {
+        document.getElementById('createSupervisionForm').addEventListener('submit', (e) => {
+            e.preventDefault();
             this.createSupervision();
+        });
+        
+        document.getElementById('clearSupervisionForm').addEventListener('click', () => {
+            this.clearSupervisionForm();
+        });
+        
+        document.getElementById('supervisionFiles').addEventListener('change', (e) => {
+            this.handleFileSelection(e);
         });
 
         // File management event listeners
@@ -416,6 +425,7 @@ class SupervisionesX {
 
     async createSupervision() {
         const nameInput = document.getElementById('newSupervisionName');
+        const filesInput = document.getElementById('supervisionFiles');
         const name = nameInput.value.trim();
         
         if (!name) {
@@ -428,52 +438,129 @@ class SupervisionesX {
             return;
         }
         
+        // Show loading state
+        const submitBtn = document.getElementById('createSupervisionBtn');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creando...';
+        submitBtn.disabled = true;
+        
         try {
+            // Process selected files
+            const files = [];
+            if (filesInput.files.length > 0) {
+                for (let i = 0; i < filesInput.files.length; i++) {
+                    const file = filesInput.files[i];
+                    const content = await this.readFileContent(file);
+                    files.push({
+                        name: file.name,
+                        content: content
+                    });
+                }
+            }
+            
             // Create supervision folder via API
             const response = await fetch('/api/supervisions', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ name })
+                body: JSON.stringify({ name, files })
             });
             
             if (response.ok) {
+                const result = await response.json();
                 const newSupervision = {
                     name: name,
                     createdDate: new Date().toLocaleDateString('es-ES'),
-                    filesCount: 0
+                    filesCount: files.length
                 };
                 
                 this.supervisions.push(newSupervision);
                 localStorage.setItem('supervisions', JSON.stringify(this.supervisions));
                 this.updateSupervisionsTable();
-                nameInput.value = '';
+                this.clearSupervisionForm();
                 
-                alert(`Supervisión "${name}" creada exitosamente`);
+                alert(`Supervisión "${name}" creada exitosamente con ${files.length} archivo(s)`);
             } else {
-                throw new Error('Error creating supervision folder');
+                const error = await response.json();
+                throw new Error(error.error || 'Error creating supervision folder');
             }
         } catch (error) {
             console.error('Error creating supervision:', error);
-            alert('Error al crear la supervisión. Verifique la conexión.');
+            alert(`Error al crear la supervisión: ${error.message}`);
+        } finally {
+            // Restore button state
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
         }
     }
 
     async selectSupervision(name) {
-        this.currentSupervision = name;
-        localStorage.setItem('currentSupervision', name);
+        // Show confirmation dialog
+        const confirmSwitch = confirm(
+            `¿Desea cambiar a la supervisión "${name}"?\n\n` +
+            `Esto lo llevará a la pantalla de selección de usuario para comenzar a trabajar con esta supervisión.`
+        );
         
-        // Load users and show user selection
-        await this.loadUsersFromTxt();
-        document.getElementById('adminScreen').classList.add('d-none');
-        document.getElementById('userSelectionScreen').classList.remove('d-none');
+        if (!confirmSwitch) {
+            return;
+        }
+        
+        // Show loading state
+        const useButtons = document.querySelectorAll(`button[onclick*="selectSupervision('${name}')"]`);
+        useButtons.forEach(btn => {
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cargando...';
+            btn.disabled = true;
+        });
+        
+        try {
+            // Set current supervision
+            this.currentSupervision = name;
+            localStorage.setItem('currentSupervision', name);
+            
+            // Update supervision indicator in admin panel
+            this.updateCurrentSupervisionIndicator(name);
+            
+            // Load users and show user selection
+            await this.loadUsersFromTxt();
+            document.getElementById('adminScreen').classList.add('d-none');
+            document.getElementById('userSelectionScreen').classList.remove('d-none');
+            
+            // Update user selection screen title
+            const userScreenTitle = document.querySelector('#userSelectionScreen .card-title');
+            if (userScreenTitle) {
+                userScreenTitle.innerHTML = `<i class="fas fa-users me-2"></i>Seleccionar Usuario - Supervisión: ${name}`;
+            }
+            
+        } catch (error) {
+            console.error('Error selecting supervision:', error);
+            alert(`Error al cambiar a la supervisión: ${error.message}`);
+            
+            // Restore button state on error
+            useButtons.forEach(btn => {
+                btn.innerHTML = '<i class="fas fa-play"></i> Usar';
+                btn.disabled = false;
+            });
+        }
     }
 
     async deleteSupervision(index) {
         const supervision = this.supervisions[index];
         
-        if (confirm(`¿Está seguro de eliminar la supervisión "${supervision.name}"? Esta acción no se puede deshacer.`)) {
+        // Show custom confirmation dialog
+        const confirmationText = prompt(
+            `ATENCIÓN: Esta acción eliminará permanentemente la supervisión "${supervision.name}" y todos sus archivos.\n\n` +
+            `Para confirmar la eliminación, escriba exactamente: eliminar`
+        );
+        
+        if (confirmationText === 'eliminar') {
+            // Show loading state
+            const deleteButtons = document.querySelectorAll(`button[onclick*="deleteSupervision(${index})"]`);
+            deleteButtons.forEach(btn => {
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Eliminando...';
+                btn.disabled = true;
+            });
+            
             try {
                 // Delete supervision folder via API
                 const response = await fetch(`/api/supervisions/${supervision.name}`, {
@@ -487,13 +574,20 @@ class SupervisionesX {
                     
                     alert(`Supervisión "${supervision.name}" eliminada exitosamente`);
                 } else {
-                    throw new Error('Error deleting supervision folder');
+                    const error = await response.json();
+                    throw new Error(error.error || 'Error deleting supervision folder');
                 }
             } catch (error) {
                 console.error('Error deleting supervision:', error);
-                alert('Error al eliminar la supervisión. Verifique la conexión.');
+                alert(`Error al eliminar la supervisión: ${error.message}`);
+                // Restore button state on error
+                this.updateSupervisionsTable();
             }
+        } else if (confirmationText !== null) {
+            // User entered something but not "eliminar"
+            alert('Texto de confirmación incorrecto. La supervisión no fue eliminada.');
         }
+        // If confirmationText is null, user cancelled - do nothing
     }
 
     async manageSupervisionFiles(supervisionName) {
@@ -530,20 +624,60 @@ class SupervisionesX {
         const filesList = document.getElementById('currentFilesList');
         
         if (files.length === 0) {
-            filesList.innerHTML = '<p class="text-muted">No hay archivos en esta supervisión.</p>';
+            filesList.innerHTML = `
+                <div class="text-center py-4">
+                    <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                    <p class="text-muted mb-0">No hay archivos en esta supervisión.</p>
+                    <small class="text-muted">Puede subir archivos usando el formulario de arriba.</small>
+                </div>
+            `;
             return;
         }
         
-        const filesHtml = files.map(file => `
-            <div class="d-flex justify-content-between align-items-center border-bottom py-2">
-                <div>
-                    <i class="fas fa-file-alt me-2"></i>
-                    <strong>${file.name}</strong>
-                    <small class="text-muted ms-2">(${this.formatFileSize(file.size)})</small>
+        const filesHtml = files.map((file, index) => {
+            const fileExtension = file.name.split('.').pop().toLowerCase();
+            const fileIcon = this.getFileIcon(fileExtension);
+            const isTextFile = ['txt', 'csv', 'log'].includes(fileExtension);
+            
+            return `
+                <div class="card mb-2">
+                    <div class="card-body py-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <i class="${fileIcon} me-3 text-primary fa-lg"></i>
+                                <div>
+                                    <strong>${file.name}</strong>
+                                    <br>
+                                    <small class="text-muted">
+                                        ${this.formatFileSize(file.size)} • 
+                                        ${new Date(file.modified).toLocaleDateString('es-ES')}
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="btn-group" role="group">
+                                ${isTextFile ? `
+                                    <button class="btn btn-sm btn-outline-primary" 
+                                            onclick="supervisionesX.previewFile('${this.currentSupervisionForFiles}', '${file.name}')" 
+                                            title="Vista previa">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                ` : ''}
+                                <button class="btn btn-sm btn-outline-success" 
+                                        onclick="supervisionesX.downloadFile('${this.currentSupervisionForFiles}', '${file.name}')" 
+                                        title="Descargar">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" 
+                                        onclick="supervisionesX.deleteFile('${this.currentSupervisionForFiles}', '${file.name}')" 
+                                        title="Eliminar">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <small class="text-muted">${new Date(file.modified).toLocaleDateString('es-ES')}</small>
-            </div>
-        `).join('');
+            `;
+        }).join('');
         
         filesList.innerHTML = filesHtml;
     }
@@ -657,6 +791,221 @@ class SupervisionesX {
         localStorage.removeItem('supervisionesX_currentUser');
         this.currentUser = null;
         this.showLoginScreen();
+    }
+
+    // Helper function to read file content
+    async readFileContent(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.onerror = (e) => reject(e);
+            reader.readAsText(file);
+        });
+    }
+
+    // Handle file selection for supervision creation
+    handleFileSelection(event) {
+        const files = event.target.files;
+        const previewContainer = document.getElementById('filePreviewContainer');
+        const previewList = document.getElementById('filePreviewList');
+        
+        if (files.length === 0) {
+            previewContainer.style.display = 'none';
+            return;
+        }
+        
+        let previewHtml = '';
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            previewHtml += `
+                <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
+                    <div>
+                        <i class="fas fa-file-alt me-2 text-primary"></i>
+                        <strong>${file.name}</strong>
+                        <small class="text-muted ms-2">(${this.formatFileSize(file.size)})</small>
+                    </div>
+                    <small class="text-muted">${file.type || 'text/plain'}</small>
+                </div>
+            `;
+        }
+        
+        previewList.innerHTML = previewHtml;
+        previewContainer.style.display = 'block';
+    }
+
+    // Clear supervision creation form
+    clearSupervisionForm() {
+        document.getElementById('newSupervisionName').value = '';
+        document.getElementById('supervisionFiles').value = '';
+        document.getElementById('filePreviewContainer').style.display = 'none';
+        document.getElementById('filePreviewList').innerHTML = '';
+    }
+
+    // Get appropriate icon for file type
+    getFileIcon(extension) {
+        const iconMap = {
+            'txt': 'fas fa-file-alt',
+            'csv': 'fas fa-file-csv',
+            'xlsx': 'fas fa-file-excel',
+            'xls': 'fas fa-file-excel',
+            'pdf': 'fas fa-file-pdf',
+            'doc': 'fas fa-file-word',
+            'docx': 'fas fa-file-word',
+            'jpg': 'fas fa-file-image',
+            'jpeg': 'fas fa-file-image',
+            'png': 'fas fa-file-image',
+            'gif': 'fas fa-file-image',
+            'zip': 'fas fa-file-archive',
+            'rar': 'fas fa-file-archive',
+            'log': 'fas fa-file-alt'
+        };
+        return iconMap[extension] || 'fas fa-file';
+    }
+
+    // Preview file content (for text files)
+    async previewFile(supervisionName, fileName) {
+        try {
+            const response = await fetch(`/api/supervisions/${supervisionName}/files/${fileName}`);
+            if (response.ok) {
+                const content = await response.text();
+                this.showFilePreviewModal(fileName, content);
+            } else {
+                alert('Error al cargar el archivo para vista previa');
+            }
+        } catch (error) {
+            console.error('Error previewing file:', error);
+            alert('Error al mostrar vista previa del archivo');
+        }
+    }
+
+    // Show file preview in modal
+    showFilePreviewModal(fileName, content) {
+        // Create modal if it doesn't exist
+        let modal = document.getElementById('filePreviewModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'filePreviewModal';
+            modal.className = 'modal fade';
+            modal.innerHTML = `
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Vista Previa: <span id="previewFileName"></span></h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <pre id="previewContent" class="bg-light p-3 rounded" style="max-height: 400px; overflow-y: auto;"></pre>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        // Update content
+        document.getElementById('previewFileName').textContent = fileName;
+        document.getElementById('previewContent').textContent = content;
+        
+        // Show modal
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+    }
+
+    // Download file
+    async downloadFile(supervisionName, fileName) {
+        try {
+            const response = await fetch(`/api/supervisions/${supervisionName}/files/${fileName}`);
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            } else {
+                alert('Error al descargar el archivo');
+            }
+        } catch (error) {
+            console.error('Error downloading file:', error);
+            alert('Error al descargar el archivo');
+        }
+    }
+
+    // Delete file
+    async deleteFile(supervisionName, fileName) {
+        const confirmationText = prompt(
+            `ATENCIÓN: Esta acción eliminará permanentemente el archivo "${fileName}".\n\n` +
+            `Para confirmar la eliminación, escriba exactamente: eliminar`
+        );
+        
+        if (confirmationText === 'eliminar') {
+            try {
+                const response = await fetch(`/api/supervisions/${supervisionName}/files/${fileName}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    alert(`Archivo "${fileName}" eliminado exitosamente`);
+                    // Reload files list
+                    await this.loadSupervisionFiles(supervisionName);
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Error deleting file');
+                }
+            } catch (error) {
+                console.error('Error deleting file:', error);
+                alert(`Error al eliminar el archivo: ${error.message}`);
+            }
+        } else if (confirmationText !== null) {
+            alert('Texto de confirmación incorrecto. El archivo no fue eliminado.');
+        }
+    }
+
+    // Update current supervision indicator in admin panel
+    updateCurrentSupervisionIndicator(supervisionName) {
+        // Add or update supervision indicator in admin panel
+        let indicator = document.getElementById('currentSupervisionIndicator');
+        if (!indicator) {
+            indicator = document.createElement('div');
+            indicator.id = 'currentSupervisionIndicator';
+            indicator.className = 'alert alert-info mb-3';
+            
+            // Insert after the admin panel header
+            const adminHeader = document.querySelector('#adminScreen .card-header');
+            if (adminHeader && adminHeader.parentNode) {
+                adminHeader.parentNode.insertBefore(indicator, adminHeader.nextSibling);
+            }
+        }
+        
+        indicator.innerHTML = `
+            <div class="d-flex align-items-center">
+                <i class="fas fa-folder-open me-2"></i>
+                <strong>Supervisión Activa:</strong>
+                <span class="ms-2 badge bg-primary">${supervisionName}</span>
+                <button class="btn btn-sm btn-outline-secondary ms-auto" onclick="supervisionesX.clearCurrentSupervision()">
+                    <i class="fas fa-times me-1"></i>Limpiar Selección
+                </button>
+            </div>
+        `;
+    }
+
+    // Clear current supervision selection
+    clearCurrentSupervision() {
+        this.currentSupervision = null;
+        localStorage.removeItem('currentSupervision');
+        
+        const indicator = document.getElementById('currentSupervisionIndicator');
+        if (indicator) {
+            indicator.remove();
+        }
+        
+        alert('Selección de supervisión limpiada. Puede seleccionar una nueva supervisión.');
     }
 
     initializeMainApp() {

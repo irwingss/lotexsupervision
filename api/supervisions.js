@@ -62,11 +62,11 @@ async function getSupervisions() {
 }
 
 // Create a new supervision folder
-async function createSupervision(name) {
+async function createSupervision(name, files = []) {
     try {
         if (useGitHub) {
             const githubModule = getGitHubModule();
-            return await githubModule.createSupervisionInGitHub(name);
+            return await githubModule.createSupervisionInGitHub(name, files);
         }
         
         await ensureUploadsDir();
@@ -201,13 +201,16 @@ function setupRoutes(app) {
     // POST /api/supervisions - Create new supervision
     app.post('/api/supervisions', async (req, res) => {
         try {
-            const { name } = req.body;
+            const { name, files } = req.body;
             
             if (!name || !name.trim()) {
                 return res.status(400).json({ error: 'Supervision name is required' });
             }
             
-            const result = await createSupervision(name.trim());
+            // Parse files if provided
+            const parsedFiles = files || [];
+            
+            const result = await createSupervision(name.trim(), parsedFiles);
             res.json(result);
         } catch (error) {
             res.status(400).json({ error: error.message });

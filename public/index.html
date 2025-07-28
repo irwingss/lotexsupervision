@@ -111,19 +111,41 @@
                                             </h5>
                                         </div>
                                         <div class="card-body">
-                                            <div class="row align-items-end">
-                                                <div class="col-md-8">
-                                                    <label for="newSupervisionName" class="form-label">Nombre de la Supervisión</label>
-                                                    <input type="text" class="form-control" id="newSupervisionName" 
-                                                           placeholder="Ej: Agosto-2025" maxlength="50">
-                                                    <div class="form-text">El nombre debe ser único y descriptivo</div>
+                                            <form id="createSupervisionForm">
+                                                <div class="row mb-3">
+                                                    <div class="col-md-6">
+                                                        <label for="newSupervisionName" class="form-label">Nombre de la Supervisión</label>
+                                                        <input type="text" class="form-control" id="newSupervisionName" 
+                                                               placeholder="Ej: Agosto-2025" maxlength="50" required>
+                                                        <div class="form-text">El nombre debe ser único y descriptivo</div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label for="supervisionFiles" class="form-label">Archivos de Supervisión</label>
+                                                        <input type="file" class="form-control" id="supervisionFiles" 
+                                                               multiple accept=".txt,.csv,.xlsx,.xls">
+                                                        <div class="form-text">Seleccione archivos .txt, .csv o .xlsx (opcional)</div>
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-4">
-                                                    <button class="btn btn-success w-100" id="createSupervisionBtn">
-                                                        <i class="fas fa-plus me-2"></i>Crear Supervisión
-                                                    </button>
+                                                
+                                                <!-- File Preview -->
+                                                <div id="filePreviewContainer" class="mb-3" style="display: none;">
+                                                    <label class="form-label">Archivos Seleccionados:</label>
+                                                    <div id="filePreviewList" class="border rounded p-2 bg-light">
+                                                        <!-- Files will be listed here -->
+                                                    </div>
                                                 </div>
-                                            </div>
+                                                
+                                                <div class="row">
+                                                    <div class="col-12">
+                                                        <button type="submit" class="btn btn-success" id="createSupervisionBtn">
+                                                            <i class="fas fa-plus me-2"></i>Crear Supervisión
+                                                        </button>
+                                                        <button type="button" class="btn btn-secondary ms-2" id="clearSupervisionForm">
+                                                            <i class="fas fa-times me-2"></i>Limpiar
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </form>
                                         </div>
                                     </div>
                                 </div>
