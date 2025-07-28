@@ -754,7 +754,7 @@ class SupervisionesX {
 
     async loadUsersFromTxt() {
         try {
-            const response = await fetch('uploads/usuarios.txt');
+            const response = await fetch('public/uploads/usuarios.txt');
             if (!response.ok) {
                 throw new Error('No se pudo cargar el archivo de usuarios');
             }
@@ -1062,7 +1062,7 @@ class SupervisionesX {
         try {
             // Determine the path based on current supervision
             const supervision = this.currentSupervision || localStorage.getItem('currentSupervision');
-            const basePath = supervision ? `uploads/${supervision}` : 'uploads';
+            const basePath = supervision ? `public/uploads/${supervision}` : 'public/uploads';
             
             console.log(`Attempting to load initial data from ${basePath}/muestra_final.txt`);
             
@@ -1122,8 +1122,8 @@ class SupervisionesX {
     
     async loadUsersFromTxt() {
         try {
-            console.log('Loading users from uploads/usuarios.txt');
-            const response = await fetch('./uploads/usuarios.txt');
+            console.log('Loading users from public/uploads/usuarios.txt');
+            const response = await fetch('./public/uploads/usuarios.txt');
             if (!response.ok) {
                 throw new Error('Could not fetch usuarios.txt file');
             }

@@ -1,0 +1,6 @@
+Juan Pérez,Supervisor,true
+María García,Analista,true
+Carlos López,Coordinador,true
+Ana Martínez,Técnico,true
+Luis Rodríguez,Supervisor,false
+Sofia Hernández,Analista,true
