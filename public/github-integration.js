@@ -23,10 +23,10 @@ class GitHubIntegration {
             this.repo = 'App_Seguimiento_LoteX';
             this.token = 'ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
             this.branch = 'main';
-            this.uploadsPath = 'uploads/';
-            this.backupPath = 'backups/';
+            this.uploadsPath = 'public/uploads/';
+            this.backupPath = 'public/backups/';
             this.autoSync = true;
-            this.defaultFilePath = 'uploads/muestra_final.xlsx';
+            this.defaultFilePath = 'public/uploads/muestra_final.xlsx';
             this.commitMessages = {
                 upload: (fileName, pointCount) => `Upload new Excel file: ${fileName} (${pointCount} points)`,
                 update: (fileName, user) => `Update progress data in ${fileName} by ${user}`,

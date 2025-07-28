@@ -447,15 +447,32 @@ class SupervisionesX {
         try {
             // Process selected files
             const files = [];
+            let totalSize = 0;
+            
             if (filesInput.files.length > 0) {
                 for (let i = 0; i < filesInput.files.length; i++) {
                     const file = filesInput.files[i];
+                    
+                    // Check individual file size (10MB limit)
+                    if (file.size > 10 * 1024 * 1024) {
+                        throw new Error(`El archivo "${file.name}" es demasiado grande (${(file.size / 1024 / 1024).toFixed(1)}MB). Límite máximo: 10MB`);
+                    }
+                    
                     const content = await this.readFileContent(file);
+                    totalSize += new Blob([content]).size;
+                    
+                    // Check if this file would make the total payload too large
+                    if (this.isFileTooLarge(JSON.stringify(files.concat([{name: file.name, content}])))) {
+                        throw new Error(`El tamaño total de los archivos es demasiado grande. Por favor, suba menos archivos o archivos más pequeños.`);
+                    }
+                    
                     files.push({
                         name: file.name,
                         content: content
                     });
                 }
+                
+                console.log(`Total files: ${files.length}, Total size: ${(totalSize / 1024 / 1024).toFixed(2)}MB`);
             }
             
             // Create supervision folder via API
@@ -801,6 +818,23 @@ class SupervisionesX {
             reader.onerror = (e) => reject(e);
             reader.readAsText(file);
         });
+    }
+
+    // Check if file content is too large for single request
+    isFileTooLarge(content) {
+        // Vercel has a 4.5MB limit for serverless functions
+        // We'll use 3MB as safe limit to account for JSON overhead
+        const maxSize = 3 * 1024 * 1024; // 3MB
+        return new Blob([content]).size > maxSize;
+    }
+
+    // Split large file content into chunks
+    chunkFileContent(content, chunkSize = 2 * 1024 * 1024) { // 2MB chunks
+        const chunks = [];
+        for (let i = 0; i < content.length; i += chunkSize) {
+            chunks.push(content.slice(i, i + chunkSize));
+        }
+        return chunks;
     }
 
     // Handle file selection for supervision creation

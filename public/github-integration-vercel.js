@@ -104,9 +104,9 @@ class GitHubIntegration {
     getCurrentExcelFilePath() {
         const currentExcelFile = localStorage.getItem('supervisionesX_currentExcel');
         if (currentExcelFile && currentExcelFile !== 'muestra_final.xlsx') {
-            return `uploads/${currentExcelFile}`;
+            return `public/uploads/${currentExcelFile}`;
         }
-        return this.config?.filePath || 'uploads/muestra_final.xlsx';
+        return this.config?.filePath || 'public/uploads/muestra_final.xlsx';
     }
 
     // Get repository information
@@ -306,7 +306,7 @@ class GitHubIntegration {
         }
 
         try {
-            const filePath = `uploads/${fileName}`;
+            const filePath = `public/uploads/${fileName}`;
             const message = commitMessage || `Upload new Excel file: ${fileName} (${excelData.length} points)`;
             
             // Check if file already exists
